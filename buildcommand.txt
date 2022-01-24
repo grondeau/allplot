@@ -3,10 +3,6 @@ python -m nuitka allplot.py --static-libpython=no --standalone --enable-plugin=t
 python -m nuitka allplot.py --standalone --enable-plugin=tk-inter --enable-plugin=numpy --enable-plugin=pyqt5 --enable-plugin=anti-bloat
 --enable-plugin=anti-bloat --noinclude-pytest-mode=nofollow --noinclude-setuptools-mode=nofollow
 
-Git Key
-
-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
-
 PATH=C:\Users\Gary\anaconda3\envs\myenv;
 C:\Users\Gary\anaconda3\envs\myenv\Library\mingw-w64\bin;
 C:\Users\Gary\anaconda3\envs\myenv\Library\usr\bin;
