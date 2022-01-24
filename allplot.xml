@@ -1,0 +1,66 @@
+<config>
+ Configuration file for ALLPlots program
+ <files>
+  Working or default file names
+  <filea filea="C:/Users/Gary/Google Drive/AntExpmts/InvL-Hex-Vert/HexFBCompare/InvLvsHex2800116.TXT">
+  </filea>
+  <descriptiona descriptiona="Inverted L">
+  </descriptiona>
+  <fileb fileb="C:/Users/Gary/Google Drive/AntExpmts/InvL-Hex-Vert/HexFBCompare/Hex280W0116.TXT">
+  </fileb>
+  <descriptionb descriptionb="Hex 280W">
+  </descriptionb>
+  <savematchsortdescrpta savematchsortdescrpta="Inverted L">
+  </savematchsortdescrpta>
+  <savematchsortdescrptb savematchsortdescrptb="Hex 280W">
+  </savematchsortdescrptb>
+  <lastmatchsortdescrpta lastmatchsortdescrpta="Inverted L">
+  </lastmatchsortdescrpta>
+  <lastmatchsortdescrptb lastmatchsortdescrptb="Hex 100E">
+  </lastmatchsortdescrptb>
+ </files>
+ <settings>
+  Program settings
+  <band band="15m">
+  </band>
+  <dpi dpi="200">
+  </dpi>
+  <xsize xsize="5.0">
+  </xsize>
+  <ysize ysize="4.0">
+  </ysize>
+  <view view="WO">
+  </view>
+  <shadow shadow="True">
+  </shadow>
+  <mapimage mapimage="False">
+  </mapimage>
+  <clrscalemx clrscalemx="20.0">
+  </clrscalemx>
+  <clrscalemn clrscalemn="-20.0">
+  </clrscalemn>
+  <scalemx scalemx="15.0">
+  </scalemx>
+  <scalemn scalemn="-15.0">
+  </scalemn>
+  <pautoscale pautoscale="True">
+  </pautoscale>
+  <latitude latitude="44.0">
+  </latitude>
+  <longitude longitude="-123.0">
+  </longitude>
+ </settings>
+ <status>
+  Program status
+  <havematches havematches="True">
+  </havematches>
+  <havesorted havesorted="True">
+  </havesorted>
+  <havereference havereference="True">
+  </havereference>
+  <inlineplots inlineplots="True">
+  </inlineplots>
+  <savedplots savedplots="True">
+  </savedplots>
+ </status>
+</config>
