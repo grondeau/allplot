@@ -119,6 +119,12 @@ def defaultXML():
     tag["longitude"]=-123.0
     y.config.settings.insert(16,tag)
     
+    tag = y.new_tag("fitorder")
+    tag["fitorder"]=3
+    y.config.settings.insert(17,tag)
+    
+    
+    
     ###  Status
     
     tag = y.new_tag("status")
@@ -143,7 +149,11 @@ def defaultXML():
     
     tag = y.new_tag("savedplots")
     tag["savedplots"]="True"
-    y.config.status.insert(6,tag)
+    y.config.status.insert(7,tag)
+    
+    tag = y.new_tag("fitdata")
+    tag["fitdata"]="False"
+    y.config.status.insert(8,tag)
     
     
     f = open(config_file_name, "w")

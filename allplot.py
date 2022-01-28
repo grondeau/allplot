@@ -7,10 +7,10 @@ Created on Mon Oct 18 23:24:47 2021
 import os
 from os.path import exists
 import config as xml
+import numpy as np
 import pandas as pd
 import math
-#import matplotlib
-#matplotlib.use('Agg')
+from symfit import parameters, variables, sin, cos, Fit
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import time
@@ -36,6 +36,7 @@ havesorted = False
 havereference = False
 inlineplots = True
 savedplots = True
+fitdata = False
 strng = ' '
 extent = [-105, 63, 0,-40]  #world
 view = 'WO'
@@ -44,6 +45,9 @@ clon = -124.0
 dpi = 200
 fsx = 6.0
 fsy= 5.0
+nfit = 3
+
+
 
 def setExtent(stuff):  
     global extent, view  
@@ -113,6 +117,12 @@ mapimage = ("True" == strng)
 strng = xml.getXML('pautoscale')
 autoscale = ("True" == strng)
 
+strng = xml.getXML('fitdata')
+fitdata = ("True" == strng)
+
+strng = xml.getXML('fitorder')
+nfit = int(strng)
+
 strng = xml.getXML('latitude')
 clat = float(strng)
 
@@ -179,6 +189,28 @@ plt.rcParams["scatter.edgecolors"] = "None"
 plt.rcParams["lines.linewidth"] = 0.2
 plt.rcParams["figure.autolayout"]=True
 #plt.rcParams["animation.ffmpeg_path"]='ffmpeg'
+
+def fourier_series(x, f, n=0):
+    """
+    Returns a symbolic fourier series of order `n`.
+
+    :param n: Order of the fourier series.
+    :param x: Independent variable
+    :param f: Frequency of the fourier series
+    """
+    # Make the parameter objects for all the terms
+    a0, *cos_a = parameters(','.join(['a{}'.format(i) for i in range(0, n + 1)]))
+    sin_b = parameters(','.join(['b{}'.format(i) for i in range(1, n + 1)]))
+    # Construct the series
+    series = a0 + sum(ai * cos(i * f * x) + bi * sin(i * f * x) 
+                     for i, (ai, bi) in enumerate(zip(cos_a, sin_b), start=1))
+    return series
+
+x, y = variables('x, y')
+#w, = parameters('w')
+model_dict = {y: fourier_series(x, f=1, n=nfit)}
+print('Fit model: ',model_dict)
+
 
 def onf(flag):
     if flag:
@@ -845,7 +877,7 @@ def process():      #Called by PO
         f3.close()
         print('Matches.csv read into dataframe...')
         
-        #print(df)
+        nmatches = len(df)
     
         df['Grid'] = df.groupby('Call')['Grid'].fillna(method = 'ffill')
         df['Grid'] = df.groupby('Call')['Grid'].fillna(method = 'bfill')
@@ -914,7 +946,7 @@ def process():      #Called by PO
         
         df = df.sort_values(["TimeStamp"]).reset_index()
         
-        print('Saving ',len(df),' remaining matches')  
+        print('From original',nmatches,', Saving ',len(df),' remaining matches')  
         
         if exists("MatchSort.csv") and not havereference:
         
@@ -988,7 +1020,17 @@ def process():      #Called by PO
     ax = fig.add_subplot(projection='polar',facecolor="#f6f6f6")
     ax.errorbar(mean['rad'], mean['SNR_AB'], yerr=mean['StdAB'], capsize=0, elinewidth=0.5, linewidth=0, ecolor=mean['Color'],zorder=2)
     ax.scatter(mean['rad'], mean['SNR_AB'], s=8, c=mean['Color'], edgecolors=['#0f0f0f'], linewidths=0.3, cmap='hsv', alpha=0.85,zorder=3)
+   
     
+   
+    
+    if fitdata:    
+        fit = Fit(model_dict, x=mean.rad, y=mean.SNR_AB)
+        fit_result = fit.execute()
+        print(fit_result)
+        theta  = np.linspace(0.0,2*np.pi,500)
+        ax.plot(theta,fit.model(x=theta, **fit_result.params).y, color='green',linewidth=1.0,zorder=4)
+      
     ax.set_theta_zero_location("N")
     ax.set_theta_direction(-1)
     ax.set_rgrids(radii=[-20,-15,-10,-5,0,5,10,15,20], angle=260., fontsize=5)   
@@ -1152,6 +1194,13 @@ def ABRef():           #called by PR
     ax.errorbar(allmean['rad'], allmean['SNR_BC'], yerr=allmean['StdBC'], capsize=0, elinewidth=0.3, linewidth=0, ecolor=allmean['Color'],zorder=2)
     ax.scatter(allmean['rad'], allmean['SNR_BC'], s=8, c=allmean['Color'], edgecolors=['#0f0f0f'], linewidths=0.3, cmap='hsv', alpha=0.75,zorder=3)
     
+    if fitdata:    
+        fit = Fit(model_dict, x=allmean.rad, y=allmean.SNR_BC)
+        fit_result = fit.execute()
+        print(fit_result)
+        theta  = np.linspace(0.0,2*np.pi,500)
+        ax.plot(theta,fit.model(x=theta, **fit_result.params).y, color='green',linewidth=1.0,zorder=4)
+        
     ax.set_theta_zero_location("N")
     ax.set_theta_direction(-1)
     ax.set_rgrids(radii=[-20,-15,-10,-5,0,5,10,15,20], angle=260., fontsize=4)   
@@ -1306,13 +1355,17 @@ def strip_path(file):
     levels = file.split('/')
     return levels[-1]  
 
-def getInteger(message):
-    while True:
-        try:
-            userInt = int(input(message))
-            return userInt
-        except ValueError:
-            print('You must enter an integer')
+def getInteger(strng,message):
+    try:
+        userInt = int(strng)
+        return userInt
+    except ValueError:
+        while True:
+            try: 
+                userInt = int(input(message))
+                return userInt
+            except:
+                print('Try again')
             
 def getXMLlocal():
     global fileA, fileB
@@ -1430,6 +1483,7 @@ while True:  #  Main -- command parser
         print('ST  status')
         print('DP  set figure and animation resolution DPI')
         print('FS  set figure size, x-inches, y-inches')
+        print('FT  turn on/off curve fit, F+/F-, Fourier degree, N (int)')
         print('DT  set time between frames for animation (minutes)')
         print('IT  set data collection time for frame (minutes)')
         print('LO  specify longitude, Latitude of observer')
@@ -1592,15 +1646,27 @@ while True:  #  Main -- command parser
                              
          else:
              print('Syntax:  FS ',fsx,' ',fsy,'  try again')
-                
+    
+    elif cmd == 'FT' or cmd == 'ft':
+        if len(cmds)>1:
+            stuff = cmds[1]
+            if stuff == 'F+' or stuff == 'f+':
+                fitdata = True
+                xml.updateXML('fitdata',fitdata)
+            elif stuff == 'F-' or stuff == 'f-':
+                fitdata = False
+                xml.updateXML('fitdata',fitdata)
+            else:
+                nfit = getInteger(stuff,'Order->')
+                xml.updateXML('fitorder',nfit)
+        print('Fit turned', onf(fitdata),' order',nfit)
+        model_dict = {y: fourier_series(x, f=1, n=nfit)}
                 
     elif cmd == 'MX' or cmd == 'mx':
         if len(cmds) > 1:
-            stuff = cmds[1]
-        else:    
-            print("Reject data if maximum Signal report for timestamp is > ",MaxSig)           
-            MaxSig = getInteger('MaxSig ->')
-            
+            MaxSig = getInteger(cmds[1],'MaxSig ->')
+        havesorted = False    
+        print("Reject data if maximum Signal report for timestamp is > ",MaxSig)      
             
     elif cmd == 'AR' or cmd == 'ar':
         mapum()        
