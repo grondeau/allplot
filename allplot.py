@@ -7,10 +7,10 @@ Created on Mon Oct 18 23:24:47 2021
 import os
 from os.path import exists
 import config as xml
-import numpy as np
 import pandas as pd
 import math
-from symfit import parameters, variables, sin, cos, Fit
+#import matplotlib
+#matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import time
@@ -22,9 +22,11 @@ import cartopy.feature as cfeature
 from cartopy.feature.nightshade import Nightshade
 from bs4 import BeautifulSoup as bs
 
- 
-Version = '1.0'  
-BuildDate = "2022-1-21"
+import warnings
+
+
+Version = '1.1'  
+BuildDate = "2022-12-14"
 df = pd
 df2 = pd
 mapimage = True
@@ -36,7 +38,6 @@ havesorted = False
 havereference = False
 inlineplots = True
 savedplots = True
-fitdata = False
 strng = ' '
 extent = [-105, 63, 0,-40]  #world
 view = 'WO'
@@ -45,9 +46,6 @@ clon = -124.0
 dpi = 200
 fsx = 6.0
 fsy= 5.0
-nfit = 3
-
-
 
 def setExtent(stuff):  
     global extent, view  
@@ -117,12 +115,6 @@ mapimage = ("True" == strng)
 strng = xml.getXML('pautoscale')
 autoscale = ("True" == strng)
 
-strng = xml.getXML('fitdata')
-fitdata = ("True" == strng)
-
-strng = xml.getXML('fitorder')
-nfit = int(strng)
-
 strng = xml.getXML('latitude')
 clat = float(strng)
 
@@ -189,28 +181,6 @@ plt.rcParams["scatter.edgecolors"] = "None"
 plt.rcParams["lines.linewidth"] = 0.2
 plt.rcParams["figure.autolayout"]=True
 #plt.rcParams["animation.ffmpeg_path"]='ffmpeg'
-
-def fourier_series(x, f, n=0):
-    """
-    Returns a symbolic fourier series of order `n`.
-
-    :param n: Order of the fourier series.
-    :param x: Independent variable
-    :param f: Frequency of the fourier series
-    """
-    # Make the parameter objects for all the terms
-    a0, *cos_a = parameters(','.join(['a{}'.format(i) for i in range(0, n + 1)]))
-    sin_b = parameters(','.join(['b{}'.format(i) for i in range(1, n + 1)]))
-    # Construct the series
-    series = a0 + sum(ai * cos(i * f * x) + bi * sin(i * f * x) 
-                     for i, (ai, bi) in enumerate(zip(cos_a, sin_b), start=1))
-    return series
-
-x, y = variables('x, y')
-#w, = parameters('w')
-model_dict = {y: fourier_series(x, f=1, n=nfit)}
-print('Fit model: ',model_dict)
-
 
 def onf(flag):
     if flag:
@@ -289,6 +259,8 @@ class animationGeneral(object):
             self.firstime = False
 
         #Axes definition
+        warnings.filterwarnings("ignore") 
+        # shapely2.0 warnings suppressed by above...
         proj = ccrs.AzimuthalEquidistant(central_latitude=clat, central_longitude=clon)  
         self.ax = plt.axes(projection=proj)
         
@@ -390,6 +362,8 @@ class animationGeneral(object):
      #   FFwriter = animation.FFMpegWriter(fps = frate, extra_args=['-vcodec', 'libx264'])
         anim.save(aniName, writer='ffmpeg', fps = frate)
         self.plt.clf()
+        warnings.filterwarnings("default") 
+        #turn warnings back on again
     
     def update(self,i):
         global antA, antB
@@ -451,11 +425,11 @@ def mapum():
     
     f1 = open(fileA,'r')
                 
-    header = ['TimeStamp', 'Freq', 'Rx/Tx', 'Mode', 'SNR', 'DT', 'AF', 'Target', 'Call', 'Grid', 'color', 'Extra2']
-    df = pd.read_csv(fileA, delimiter=r"\s+", names=header,dtype={'color': 'str', 'Extra2': 'str'})  # read in the entire ALL.txt file    
+    header = ['TimeStamp', 'Freq', 'Rx/Tx', 'Mode', 'SNR', 'DT', 'AF', 'Target', 'Call', 'Grid', 'color', 'Extra2', 'Extra3']
+    df = pd.read_csv(fileA, delimiter=r"\s+", names=header,dtype={'color': 'str', 'Extra2': 'str', 'Extra3': 'str'})  # read in the entire ALL.txt file    
     f1.close()
     
-    df = df.drop(columns=['Rx/Tx', 'Mode', 'DT', 'AF', 'Target','Extra2'])
+    df = df.drop(columns=['Rx/Tx', 'Mode', 'DT', 'AF', 'Target','Extra2','Extra3'])
     
     if fileB == "ALL.txt":
         fileB = 'None'
@@ -465,6 +439,8 @@ def mapum():
         f2 = open(fileB,'r')
         df2 = pd.read_csv(fileB, delimiter=r"\s+", names=header,dtype={'color': 'str', 'Extra2': 'str'})  # read in the entire ALL.txt file    
         f2.close()
+        
+        #print('AR1 - df2:', df2.columns)
         
         print("A and B files will be animated. Fixing up B...")
         df2 = df2.drop(columns=['Rx/Tx', 'Mode', 'DT', 'AF', 'Target','Extra2'])
@@ -877,7 +853,7 @@ def process():      #Called by PO
         f3.close()
         print('Matches.csv read into dataframe...')
         
-        nmatches = len(df)
+        #print(df)
     
         df['Grid'] = df.groupby('Call')['Grid'].fillna(method = 'ffill')
         df['Grid'] = df.groupby('Call')['Grid'].fillna(method = 'bfill')
@@ -946,7 +922,7 @@ def process():      #Called by PO
         
         df = df.sort_values(["TimeStamp"]).reset_index()
         
-        print('From original',nmatches,', Saving ',len(df),' remaining matches')  
+        print('Saving ',len(df),' remaining matches')  
         
         if exists("MatchSort.csv") and not havereference:
         
@@ -985,14 +961,17 @@ def process():      #Called by PO
         print('Data for '+bnd+' not found. Using all bands')
         bnd = 'All bands'
         
- #   print('Process1 - df:', df.columns)
+   # print('Process1 - df:', df.columns)
  
     grouped = df.groupby(['Band','Grid','Color'])
+    
+   # Process1 - df: Index(['index', 'Call', 'MaxA', 'MaxB', 'TimeStamp', 'SNR_A',
+   #   'SNR_B', 'SNR_AB', 'Lon', 'Lat'],
 
-    mean = grouped.mean() 
+    mean = grouped.mean(numeric_only=True) 
     mean = mean.assign(StdAB=grouped['SNR_AB'].std())
     mean = mean.drop(columns=['MaxA','MaxB','index'])
-#    print("Process2 - mean:",mean.columns)
+    #print("Process2 - mean:",mean.columns)
 
     mean['StdAB'] = mean['StdAB'].fillna(0)
     
@@ -1015,26 +994,18 @@ def process():      #Called by PO
     #print("Process3:",mean.columns)
     maxsnrab = max(mean.SNR_AB)
     minsnrab = min(mean.SNR_AB)
-
+    # print("Process4 -mean after resetindex:",mean)
+    warnings.filterwarnings("ignore") 
     fig = plt.figure(num=1, dpi=dpi, figsize = (fsx,fsy))  # 1200 x 1000 pixels
     ax = fig.add_subplot(projection='polar',facecolor="#f6f6f6")
     ax.errorbar(mean['rad'], mean['SNR_AB'], yerr=mean['StdAB'], capsize=0, elinewidth=0.5, linewidth=0, ecolor=mean['Color'],zorder=2)
-    ax.scatter(mean['rad'], mean['SNR_AB'], s=8, c=mean['Color'], edgecolors=['#0f0f0f'], linewidths=0.3, cmap='hsv', alpha=0.85,zorder=3)
-   
-    
-   
-    
-    if fitdata:    
-        fit = Fit(model_dict, x=mean.rad, y=mean.SNR_AB)
-        fit_result = fit.execute()
-        print(fit_result)
-        theta  = np.linspace(0.0,2*np.pi,500)
-        ax.plot(theta,fit.model(x=theta, **fit_result.params).y, color='green',linewidth=1.0,zorder=4)
-      
+    ax.scatter(mean['rad'], mean['SNR_AB'], s=8, c=mean['Color'] , edgecolors=['#0f0f0f'], linewidths=0.3, cmap='hsv', alpha=0.85,zorder=3)
+   # ax.scatter(mean['rad'], mean['SNR_AB'], s=8, edgecolors=['#0f0f0f'], linewidths=0.3, alpha=0.85,zorder=3)
     ax.set_theta_zero_location("N")
     ax.set_theta_direction(-1)
     ax.set_rgrids(radii=[-20,-15,-10,-5,0,5,10,15,20], angle=260., fontsize=5)   
     ax.set_rorigin(-50)
+    warnings.filterwarnings("default") 
     if not autoscale:
         ax.set_rlim(minscale, maxscale)
         
@@ -1072,7 +1043,7 @@ def process():      #Called by PO
 
     print(mean.shape[0],' Unique Band/Grid values to plot')
 
-    byband = mean.groupby('Band').mean()
+    byband = mean.groupby('Band').mean(numeric_only=True)
     byband = byband.drop(columns=['SNR_A','SNR_B','Bearing','Distance'])
 
     print(' \n SNR differences by Band \n')
@@ -1194,13 +1165,6 @@ def ABRef():           #called by PR
     ax.errorbar(allmean['rad'], allmean['SNR_BC'], yerr=allmean['StdBC'], capsize=0, elinewidth=0.3, linewidth=0, ecolor=allmean['Color'],zorder=2)
     ax.scatter(allmean['rad'], allmean['SNR_BC'], s=8, c=allmean['Color'], edgecolors=['#0f0f0f'], linewidths=0.3, cmap='hsv', alpha=0.75,zorder=3)
     
-    if fitdata:    
-        fit = Fit(model_dict, x=allmean.rad, y=allmean.SNR_BC)
-        fit_result = fit.execute()
-        print(fit_result)
-        theta  = np.linspace(0.0,2*np.pi,500)
-        ax.plot(theta,fit.model(x=theta, **fit_result.params).y, color='green',linewidth=1.0,zorder=4)
-        
     ax.set_theta_zero_location("N")
     ax.set_theta_direction(-1)
     ax.set_rgrids(radii=[-20,-15,-10,-5,0,5,10,15,20], angle=260., fontsize=4)   
@@ -1266,7 +1230,7 @@ def mapsigs(code):
     
 #   if shadow:      
 #        ax.add_feature(Nightshade(date, alpha=0.4))
-            
+    warnings.filterwarnings("ignore")        
     if mapimage:
         ax.stock_img()
         print('Land Image added...') 
@@ -1348,6 +1312,7 @@ def mapsigs(code):
         plt.show()
     else:
         plt.clf() 
+    warnings.filterwarnings("default")     
     f3.close()
     
 
@@ -1355,17 +1320,13 @@ def strip_path(file):
     levels = file.split('/')
     return levels[-1]  
 
-def getInteger(strng,message):
-    try:
-        userInt = int(strng)
-        return userInt
-    except ValueError:
-        while True:
-            try: 
-                userInt = int(input(message))
-                return userInt
-            except:
-                print('Try again')
+def getInteger(message):
+    while True:
+        try:
+            userInt = int(input(message))
+            return userInt
+        except ValueError:
+            print('You must enter an integer')
             
 def getXMLlocal():
     global fileA, fileB
@@ -1483,7 +1444,6 @@ while True:  #  Main -- command parser
         print('ST  status')
         print('DP  set figure and animation resolution DPI')
         print('FS  set figure size, x-inches, y-inches')
-        print('FT  turn on/off curve fit, F+/F-, Fourier degree, N (int)')
         print('DT  set time between frames for animation (minutes)')
         print('IT  set data collection time for frame (minutes)')
         print('LO  specify longitude, Latitude of observer')
@@ -1646,27 +1606,15 @@ while True:  #  Main -- command parser
                              
          else:
              print('Syntax:  FS ',fsx,' ',fsy,'  try again')
-    
-    elif cmd == 'FT' or cmd == 'ft':
-        if len(cmds)>1:
-            stuff = cmds[1]
-            if stuff == 'F+' or stuff == 'f+':
-                fitdata = True
-                xml.updateXML('fitdata',fitdata)
-            elif stuff == 'F-' or stuff == 'f-':
-                fitdata = False
-                xml.updateXML('fitdata',fitdata)
-            else:
-                nfit = getInteger(stuff,'Order->')
-                xml.updateXML('fitorder',nfit)
-        print('Fit turned', onf(fitdata),' order',nfit)
-        model_dict = {y: fourier_series(x, f=1, n=nfit)}
+                
                 
     elif cmd == 'MX' or cmd == 'mx':
         if len(cmds) > 1:
-            MaxSig = getInteger(cmds[1],'MaxSig ->')
-        havesorted = False    
-        print("Reject data if maximum Signal report for timestamp is > ",MaxSig)      
+            stuff = cmds[1]
+        else:    
+            print("Reject data if maximum Signal report for timestamp is > ",MaxSig)           
+            MaxSig = getInteger('MaxSig ->')
+            
             
     elif cmd == 'AR' or cmd == 'ar':
         mapum()        

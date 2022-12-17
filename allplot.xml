@@ -2,28 +2,28 @@
  Configuration file for ALLPlots program
  <files>
   Working or default file names
-  <filea filea="C:/Users/Gary/Google Drive/AntExpmts/InvL-Hex-Vert/HexFBCompare/InvLvsHex2800116.TXT">
+  <filea filea="D:/DPYfun/allplot/InvL0111.TXT">
   </filea>
-  <descriptiona descriptiona="Inverted L">
+  <descriptiona descriptiona="InvL">
   </descriptiona>
-  <fileb fileb="C:/Users/Gary/Google Drive/AntExpmts/InvL-Hex-Vert/HexFBCompare/Hex280W0116.TXT">
+  <fileb fileb="D:/DPYfun/allplot/FlagN0111.TXT">
   </fileb>
-  <descriptionb descriptionb="Hex 280W">
+  <descriptionb descriptionb="FlagN">
   </descriptionb>
-  <savematchsortdescrpta savematchsortdescrpta="Inverted L">
+  <savematchsortdescrpta savematchsortdescrpta="InvL">
   </savematchsortdescrpta>
-  <savematchsortdescrptb savematchsortdescrptb="Hex 280W">
+  <savematchsortdescrptb savematchsortdescrptb="FlagN">
   </savematchsortdescrptb>
-  <lastmatchsortdescrpta lastmatchsortdescrpta="Inverted L">
+  <lastmatchsortdescrpta lastmatchsortdescrpta=" ">
   </lastmatchsortdescrpta>
-  <lastmatchsortdescrptb lastmatchsortdescrptb="Hex 100E">
+  <lastmatchsortdescrptb lastmatchsortdescrptb=" ">
   </lastmatchsortdescrptb>
  </files>
  <settings>
   Program settings
-  <band band="15m">
+  <band band="All Bands">
   </band>
-  <dpi dpi="200">
+  <dpi dpi="400">
   </dpi>
   <xsize xsize="5.0">
   </xsize>
@@ -35,9 +35,9 @@
   </shadow>
   <mapimage mapimage="False">
   </mapimage>
-  <clrscalemx clrscalemx="20.0">
+  <clrscalemx clrscalemx="10.0">
   </clrscalemx>
-  <clrscalemn clrscalemn="-20.0">
+  <clrscalemn clrscalemn="-10.0">
   </clrscalemn>
   <scalemx scalemx="15.0">
   </scalemx>
