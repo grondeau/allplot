@@ -2,34 +2,34 @@
  Configuration file for ALLPlots program
  <files>
   Working or default file names
-  <filea filea="D:/DPYfun/allplot/InvL0111.TXT">
+  <filea filea="C:/Users/Gary/Google Drive/AntExpmts/FlagLoop/LoopN020422.TXT">
   </filea>
-  <descriptiona descriptiona="InvL">
+  <descriptiona descriptiona="LoopN">
   </descriptiona>
-  <fileb fileb="D:/DPYfun/allplot/FlagN0111.TXT">
+  <fileb fileb="C:/Users/Gary/Google Drive/AntExpmts/FlagLoop/InvL020422.TXT">
   </fileb>
-  <descriptionb descriptionb="FlagN">
+  <descriptionb descriptionb="InvL">
   </descriptionb>
-  <savematchsortdescrpta savematchsortdescrpta="InvL">
+  <savematchsortdescrpta savematchsortdescrpta="LoopN">
   </savematchsortdescrpta>
-  <savematchsortdescrptb savematchsortdescrptb="FlagN">
+  <savematchsortdescrptb savematchsortdescrptb="InvL">
   </savematchsortdescrptb>
-  <lastmatchsortdescrpta lastmatchsortdescrpta=" ">
+  <lastmatchsortdescrpta lastmatchsortdescrpta="InvL">
   </lastmatchsortdescrpta>
-  <lastmatchsortdescrptb lastmatchsortdescrptb=" ">
+  <lastmatchsortdescrptb lastmatchsortdescrptb="Loop">
   </lastmatchsortdescrptb>
  </files>
  <settings>
   Program settings
-  <band band="All Bands">
+  <band band="All bands">
   </band>
-  <dpi dpi="400">
+  <dpi dpi="200">
   </dpi>
   <xsize xsize="5.0">
   </xsize>
   <ysize ysize="4.0">
   </ysize>
-  <view view="WO">
+  <view view="NH">
   </view>
   <shadow shadow="True">
   </shadow>
@@ -60,7 +60,7 @@
   </havereference>
   <inlineplots inlineplots="True">
   </inlineplots>
-  <savedplots savedplots="True">
+  <savedplots savedplots="False">
   </savedplots>
  </status>
 </config>

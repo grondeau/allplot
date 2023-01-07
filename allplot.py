@@ -25,8 +25,8 @@ from bs4 import BeautifulSoup as bs
 import warnings
 
 
-Version = '1.1'  
-BuildDate = "2022-12-14"
+Version = '1.2'  
+BuildDate = "2023-01-07"
 df = pd
 df2 = pd
 mapimage = True
@@ -521,31 +521,6 @@ def animum(df,df2,col):
     if twofiles:
         df2['TimeStamp'] = pd.to_datetime(df2['TimeStamp'], format='%y%m%d_%H%M%S')
     #Remove things not Grids from the Grids column
-   
-   
-    
-    starttime1 = df.TimeStamp[0]
-    lastone = len(df)
-    endtime1 = df.TimeStamp[lastone-1]
-   # print(df.TimeStamp[lastone-1])
-
-
-    if twofiles:
-        starttime2 = df2.TimeStamp[0]
-        lastone = len(df2)
-        endtime2 = df2.TimeStamp[lastone-1]     
-        starttime1 = min(starttime1,starttime2)
-        endtime1 = max(endtime1, endtime2)
-    
-        
-    c = endtime1 - starttime1
-    minutes = int(c.total_seconds() / 60)
-    nframes = int(minutes/delta_t)
- 
-    print('Start: ', starttime1)
-    print('End: ',endtime1)
-    print('nframes', nframes)
-    print('delta_t', delta_t)
     
     df = df.sort_values('TimeStamp')
     df.set_index('TimeStamp', inplace=True)
@@ -555,6 +530,34 @@ def animum(df,df2,col):
         df2.set_index('TimeStamp', inplace=True)
         
     #print(df)
+   
+
+    starttime1 = df.index[0]
+    lastone = len(df)
+    endtime1 = df.index[lastone-1]
+   # print(df.TimeStamp[lastone-1])
+
+
+    if twofiles:
+        starttime2 = df2.index[0]
+        lastone = len(df2)
+        endtime2 = df2.index[lastone-1]     
+        starttime1 = min(starttime1,starttime2)
+        endtime1 = max(endtime1, endtime2)
+    
+        
+    c = endtime1 - starttime1
+    minutes = int(c.total_seconds() / 60)
+    nframes = int(minutes/delta_t)
+ 
+    print('Start: ', starttime1)
+ 
+    print('End: ',endtime1)
+ 
+    print('nframes', nframes)
+    print('delta_t', delta_t)
+    
+ 
 
     animationGeneral(df[col],df.Lon, df.Lat, df2[col], df2.Lon, df2.Lat, starttime1, nframes ,delta_t, fileA, fileB, col)       
     #a.show()
@@ -1659,7 +1662,6 @@ while True:  #  Main -- command parser
         else:
             print("Map Views: WO world, NH N.Hemisphere, NA N.America, AM N&S America")
             print("Effects:  F+ F- Map Image, S+ S- Night Shadow")
-            stuff = input('->')
         if stuff == 'F+' or stuff == 'f+':
             mapimage = True
         elif stuff == 'F-' or stuff == 'f-':
@@ -1668,9 +1670,18 @@ while True:  #  Main -- command parser
             shadow = True
         elif stuff == 'S-' or stuff == 's-':
             shadow = False
-        else:
+        elif stuff == 'WO' or stuff == 'wo' or stuff == 'NH' or stuff == 'nh' or stuff == 'NA' or stuff == 'na' or stuff == 'AM' or stuff =='am':
             view = stuff
-        print(setExtent(view),'Mapimage:',mapimage)
+        if mapimage == True:
+            istr = 'ON'
+        else:
+            istr = 'OFF'  
+        if shadow == True:
+            ish = 'ON'
+        else: 
+            ish = 'OFF'
+            
+        print(setExtent(view),'      Mapimage:',istr, '    Night Shadow:',ish)
         
         
     elif cmd == 'XM' or cmd =='xm':
