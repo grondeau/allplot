@@ -25,8 +25,8 @@ from bs4 import BeautifulSoup as bs
 import warnings
 
 
-Version = '1.2'  
-BuildDate = "2023-01-07"
+Version = '1.2a'  
+BuildDate = "2023-01-21"
 df = pd
 df2 = pd
 mapimage = True
@@ -743,11 +743,13 @@ def matches():    #Called by CF
  #                                   print("fixed:", aline_field[8], aline_field[9])
                                 except:
                                     print('No Call:',bline_field[8],aline_field[9])
-
-                        matchstring = str(amxreport) + ' '+ str(bmxreport)+ ' ' + aline_field[0] +' ' + getband(float(aline_field[1]))[0] + ' ' + getband(float(aline_field[1]))[1] +' '+ aline_field[4]+' '+bline_field[4]+' '+aline_field[8]+' '+cleangrid(aline_field[9])+"\n"
-#                       print (matchstring)
-                        f3.writelines(matchstring)  
-                        counter += 1   
+                        try:
+                            matchstring = str(amxreport) + ' '+ str(bmxreport)+ ' ' + aline_field[0] +' ' + getband(float(aline_field[1]))[0] + ' ' + getband(float(aline_field[1]))[1] +' '+ aline_field[4]+' '+bline_field[4]+' '+aline_field[8]+' '+cleangrid(aline_field[9])+"\n"
+#                           print (matchstring)
+                            f3.writelines(matchstring)  
+                            counter += 1 
+                        except:
+                            print('Bad Record:',bline_field[8],aline_field[9])
             if cts  < bline_field[0]:
                 break
     print(counter,' Matches found...')
