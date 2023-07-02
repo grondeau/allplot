@@ -25,8 +25,8 @@ from bs4 import BeautifulSoup as bs
 import warnings
 
 
-Version = '1.2a'  
-BuildDate = "2023-01-21"
+Version = '1.3'  
+BuildDate = "2023-07-02"
 df = pd
 df2 = pd
 mapimage = True
@@ -677,7 +677,7 @@ def matches():    #Called by CF
     global aline_field, bline_field
     global fileA, fileB
     global havematches
-    
+    i100 = 0
     pointer = 0
     rwpointer = 0
     cts = ' '
@@ -697,10 +697,31 @@ def matches():    #Called by CF
     f3.write(header)
 
     print("Processing Input Files Looking for Matches") 
-    counter = 0    
+    counter = 0 
+#
+#   this is a brute force parcer.  It goes through the two source files a line at a time - watching 
+#   the TimeStamps to keep the searching constrained, looking for the same Call in the same timestamp period
+#   in the two files.
+#
+#   The lines are splint into space-delimited fields.  The variable data is in the fields 7 through 11
+#   Standard calls and responces are handled without a problem:
+#
+# Field:   7      8     9
+#        T1RGT MY2CLL EN32
+#        T1RGT MY2CLL R-03
+#          CQ  MY2CLL EN32
+#
+#    More difficult is handeling odd cases.  
+#         CQ  EU MY2CLL EN32                    When Field 8 is 3 characters or less we assume the real call is in Field 9 - shift data one field.
+#         WA3GM <BX8AAN/MM> -08                 Remove '<' and '>' characters.
+#         W9OG <...> R+01                       Discard lines with <...> 
+#         DL4JG RR73; DO6PS <5B4AMX> -14        More than 9 fields -- just ignore that data.
+#         LU3TYP S0PGI R 569 0237               More than 9 fields -- just ignore that data.  
+
+    
     while True:
         aline = f1.readline()
-        if aline=='':
+        if aline=='':                               # At end of A file -- all done 
             break
         aline = aline.replace('<','')
         aline = aline.replace('>','')         
@@ -720,7 +741,7 @@ def matches():    #Called by CF
         while True :
             pointer = f2.tell()
             bline = f2.readline()
-            if bline=='':
+            if bline=='':                            # At end of B file 
                 break
             bline = bline.replace('<','')
             bline = bline.replace('>','')  
@@ -732,22 +753,34 @@ def matches():    #Called by CF
             if first and cts==bline_field[0]:
                 first = False
                 rwpointer = pointer
-            if cts == bline_field[0]:
-                if bline_field.__len__() >= 10 and aline_field.__len__() >= 10:
-                    if bline_field[8] == aline_field[8]:
-                        if len(bline_field[8])<=3:
-                            if (bline_field[8].isalpha() or bline_field[8].isdigit()) and bline_field[9]==aline_field[9]:
-                                aline_field[8] = aline_field[9]
-                                try:
-                                    aline_field[9] = aline_field[10]
- #                                   print("fixed:", aline_field[8], aline_field[9])
-                                except:
-                                    print('No Call:',bline_field[8],aline_field[9])
+            # has to be the correct timestamp    &   cleanup conditions for the raw files
+            if cts == bline_field[0] and\
+            bline_field.__len__() <= 10 and\
+            aline_field.__len__() <= 10 and\
+            bline_field.__len__() > 9 and\
+            aline_field.__len__() > 9 and\
+            aline[8] != '...':                 
+                if bline_field[8] == aline_field[8]:
+                    fixed = True
+                    if len(bline_field[8])<=3:
+                        if (bline_field[8].isalpha() or bline_field[8].isdigit()) and bline_field[9]==aline_field[9]:
+                            aline_field[8] = aline_field[9]                              
+                            try:
+                                aline_field[9] = aline_field[10]
+                                print("fixed:", aline_field[8], aline_field[9])
+                            except:
+                                print('No Call:',bline_field[8],aline_field[9])
+                                fixed = False
+                    if fixed:
                         try:
                             matchstring = str(amxreport) + ' '+ str(bmxreport)+ ' ' + aline_field[0] +' ' + getband(float(aline_field[1]))[0] + ' ' + getband(float(aline_field[1]))[1] +' '+ aline_field[4]+' '+bline_field[4]+' '+aline_field[8]+' '+cleangrid(aline_field[9])+"\n"
-#                           print (matchstring)
+                        #   print (matchstring)
                             f3.writelines(matchstring)  
                             counter += 1 
+                            i100 += 1
+                            if i100 == 1000:
+                                i100 = 0
+                                print(counter)
                         except:
                             print('Bad Record:',bline_field[8],aline_field[9])
             if cts  < bline_field[0]:
@@ -950,11 +983,20 @@ def process():      #Called by PO
         xml.updateXML('savematchsortdescrpta',antA)
         xml.updateXML('savematchsortdescrptb',antB)
         havesorted = True
-        xml.updateXML('havesorted',True)
+        xml.updateXML('havesorted',True)        
     else:
-        f3 = open("MatchSort.csv",'r')            
-        df = pd.read_csv("MatchSort.csv")
-        f3.close()
+        try:
+            f3 = open("MatchSort.csv",'r')            
+            df = pd.read_csv("MatchSort.csv")
+            f3.close()
+        #    print('verify MatchSort.csv write and read')
+        #    print(df)
+        except:
+            print('Failed to Open MatchSort.csv file.')
+            return 
+        
+        
+            
 
 
     print(len(df),'Total Valid  Matches')
